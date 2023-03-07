@@ -1,13 +1,14 @@
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as lambdaNodeJS from 'aws-cdk-lib/aws-lambda-nodejs';
-import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
+import { Duration, Stack, StackProps } from 'aws-cdk-lib';
+import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 
-export class ProductsAppStack extends cdk.Stack {
+export class ProductsAppStack extends Stack {
 
-	readonly productsFetchHandler: lambdaNodeJS.NodejsFunction;
+	readonly productsFetchHandler: NodejsFunction;
 
-	constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+	constructor(scope: Construct, id: string, props?: StackProps) {
 		super(scope, id, props);
 
 		/**
@@ -28,7 +29,7 @@ export class ProductsAppStack extends cdk.Stack {
 		/**
 		 * Estrutura da lambda
 		 */
-		const lambdaFunc = new lambdaNodeJS.NodejsFunction(
+		const lambdaFunc = new NodejsFunction(
 			this,
 			functionName,
 			{
@@ -36,7 +37,7 @@ export class ProductsAppStack extends cdk.Stack {
 				entry: 'src/lambda/products/productsFetchFunction.ts',
 				handler: 'handler',
 				memorySize: 128, // 128Mb
-				timeout: cdk.Duration.seconds(5),
+				timeout: Duration.seconds(5),
 				bundling: {
 					minify: true,
 					sourceMap: false
