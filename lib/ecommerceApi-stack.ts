@@ -61,7 +61,8 @@ export class EcommerceApiStack extends Stack {
 			functionName,
 			{
 				restApiName: functionName,
-				deployOptions: { accessLogDestination, accessLogFormat }
+				deployOptions: { accessLogDestination, accessLogFormat },
+				cloudWatchRole: true
 			}
 		);
 
