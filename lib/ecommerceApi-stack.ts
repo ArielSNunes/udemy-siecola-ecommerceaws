@@ -5,12 +5,19 @@ import { AccessLogFormat, LambdaIntegration, LogGroupLogDestination, RestApi } f
 import { LogGroup } from 'aws-cdk-lib/aws-logs';
 
 interface EcommerceApiStackProps extends StackProps {
-	productsFetchHandler: NodejsFunction
+	productsFetchHandler: NodejsFunction,
+	productsAdminHandler: NodejsFunction
+}
+
+interface LogConfig {
+	accessLogDestination: LogGroupLogDestination,
+	accessLogFormat: AccessLogFormat
 }
 
 export class EcommerceApiStack extends Stack {
 
 	private readonly logGroup: LogGroup;
+	private apiGateway: RestApi;
 
 	constructor(scope: Construct, id: string, readonly props: EcommerceApiStackProps) {
 		super(scope, id, props);
@@ -21,17 +28,25 @@ export class EcommerceApiStack extends Stack {
 		this.logGroup = new LogGroup(this, 'EcommerceApiLogs');
 
 		/**
+		 * Criação das configurações de log
+		 */
+		const logConfig = this.createLogConfigs.call(this);
+
+		/**
 		 * Cria o api gateway
 		 */
-		this.createApiGateway.call(this);
+		this.apiGateway = this.createApiGateway.call(this, logConfig);
+
+		/**
+		 * Cria os recursos lambda vinculados ao Api Gateway
+		 */
+		this.createLambdaResources.call(this);
 	}
 
-	private createApiGateway() {
-		/**
-		 * Nome da função
-		 */
-		const functionName = 'ProductsFetchFunction';
-
+	/**
+	 * Método responsável por criar os logs de configuração
+	 */
+	private createLogConfigs() {
 		/**
 		 * Cria o destino do log de grupos
 		 */
@@ -52,6 +67,18 @@ export class EcommerceApiStack extends Stack {
 			caller: true
 		});
 
+		return { accessLogDestination, accessLogFormat };
+	}
+
+	/**
+	 * Método responsável por criar o api gateway
+	 */
+	private createApiGateway(logConfig: LogConfig) {
+		/**
+		 * Nome da função
+		 */
+		const functionName = 'ProductsFetchFunction';
+
 		/**
 		 * Cria o api gateway
 		 */
@@ -60,28 +87,44 @@ export class EcommerceApiStack extends Stack {
 			functionName,
 			{
 				restApiName: functionName,
-				deployOptions: { accessLogDestination, accessLogFormat },
+				deployOptions: logConfig,
 				cloudWatchRole: true
 			}
 		);
 
+		return api;
+	}
+
+	/**
+	 * Método responsável por criar os recursos lambda
+	 */
+	private createLambdaResources() {
 		/**
 		 * Informa que a lambda vai ter integração com o apiGateway
 		 */
 		const productsFetchIntegration = new LambdaIntegration(
 			this.props.productsFetchHandler
 		);
+		const productsAdminIntegration = new LambdaIntegration(
+			this.props.productsAdminHandler
+		);
 
 		/**
-		 * Cria o resource em /products
+		 * Criação dos recursos em /products e /products/{id}
 		 */
-		const productsResource = api.root.addResource('products');
+		const productsResource = this.apiGateway.root.addResource('products');
+		const productByIdResource = productsResource.addResource('{id}');
 
 		/**
-		 * Informa que o resource terá o metodo para a ação
+		 * Adiciona as rotas nos recursos
 		 */
 		productsResource.addMethod('GET', productsFetchIntegration);
+		productsResource.addMethod('POST', productsAdminIntegration);
 
-		return api;
+		productByIdResource.addMethod('GET', productsFetchIntegration);
+		productByIdResource.addMethod('PUT', productsAdminIntegration);
+		productByIdResource.addMethod('DELETE', productsAdminIntegration);
+		
+		return;
 	}
 }

@@ -6,6 +6,7 @@ import { AttributeType, BillingMode, Table, TableClass } from 'aws-cdk-lib/aws-d
 export class ProductsAppStack extends Stack {
 
 	readonly productsFetchHandler: NodejsFunction;
+	readonly productsAdminHandler: NodejsFunction;
 	readonly productsDynamoDb: Table;
 
 	constructor(scope: Construct, id: string, props?: StackProps) {
@@ -20,6 +21,11 @@ export class ProductsAppStack extends Stack {
 		 * Cria a lambda para fetch de produtos
 		 */
 		this.productsFetchHandler = this.createProductFetchHandler.call(this);
+
+		/**
+		 * Cria a lambda para admin de produtos
+		 */
+		this.productsAdminHandler = this.createProductsAdminHandler.call(this);
 
 		/**
 		 * Chama o método para adicionar permissões adicionais
@@ -51,6 +57,42 @@ export class ProductsAppStack extends Stack {
 		);
 
 		return table;
+	}
+
+	private createProductsAdminHandler() {
+		/**
+		 * Nome da função
+		 */
+		const functionName = 'ProductsAdminFunction';
+
+		/**
+		 * Variáveis de ambiente para serem passadas para a função lambda
+		 */
+		const environment = {
+			PRODUCTS_DYNAMO_TABLE_NAME: this.productsDynamoDb.tableName
+		};
+
+		/**
+		 * Estrutura da lambda
+		 */
+		const lambdaFunc = new NodejsFunction(
+			this,
+			functionName,
+			{
+				functionName,
+				entry: 'src/lambda/products/productsAdminFunction.ts',
+				handler: 'handler',
+				memorySize: 128, // 128Mb
+				timeout: Duration.seconds(5),
+				bundling: {
+					minify: true,
+					sourceMap: false
+				},
+				environment
+			}
+		);
+
+		return lambdaFunc;
 	}
 
 	/**
@@ -97,5 +139,6 @@ export class ProductsAppStack extends Stack {
 	 */
 	private additionalPermissions() {
 		this.productsDynamoDb.grantReadData(this.productsFetchHandler);
+		this.productsDynamoDb.grantWriteData(this.productsAdminHandler);
 	}
 }
