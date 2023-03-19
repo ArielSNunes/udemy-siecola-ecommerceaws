@@ -1,6 +1,10 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from "aws-lambda";
 
-export class ProductFetch {
+export type GetProductsParams = {
+	id?: string
+}
+
+export class SingleProductFetch {
 	/**
 	 * Ids da requisição e da lambda
 	 */
@@ -19,10 +23,13 @@ export class ProductFetch {
 	 * Método responsável por executar o lambda
 	 */
 	async execute(): Promise<APIGatewayProxyResult> {
+		const params = this.event.pathParameters as GetProductsParams;
+
 		return {
 			statusCode: 200,
 			body: JSON.stringify({
-				message: 'GET Products - OK'
+				message: `GET products/${params.id}`,
+				params
 			})
 		};
 	}
