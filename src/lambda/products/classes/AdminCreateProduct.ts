@@ -23,13 +23,10 @@ export class AdminCreateProduct {
 	 * Método responsável por buscar os produtos
 	 */
 	async createProduct(): Promise<APIGatewayProxyResult> {
-		const params = this.event.pathParameters as GetProductsParams;
-
 		return {
-			statusCode: 200,
+			statusCode: 201,
 			body: JSON.stringify({
-				message: `GET products/${params.id}`,
-				params
+				message: `POST products`
 			})
 		};
 	}
@@ -56,7 +53,7 @@ export class AdminCreateProduct {
 		const params = this.event.pathParameters as GetProductsParams;
 
 		return {
-			statusCode: 200,
+			statusCode: 204,
 			body: JSON.stringify({
 				message: `DELETE products/${params.id}`,
 				params
