@@ -77,7 +77,7 @@ export class EcommerceApiStack extends Stack {
 		/**
 		 * Nome da função
 		 */
-		const functionName = 'ProductsFetchFunction';
+		const functionName = 'ECommerceApi';
 
 		/**
 		 * Cria o api gateway
