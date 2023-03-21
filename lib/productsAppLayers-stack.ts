@@ -18,9 +18,7 @@ export class ProductAppLayersStack extends Stack {
 
 	createLayerVersion() {
 		const layerName = 'ProductsLayer';
-
 		const systemManagerName = 'ProductsLayerVersionARN';
-
 		const lambdaLayer = new LayerVersion(
 			this,
 			layerName,

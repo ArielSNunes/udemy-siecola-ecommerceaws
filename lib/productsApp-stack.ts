@@ -2,35 +2,45 @@ import { Construct } from 'constructs';
 import { Duration, RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { AttributeType, BillingMode, Table, TableClass } from 'aws-cdk-lib/aws-dynamodb';
+import { StringParameter } from 'aws-cdk-lib/aws-ssm';
+import { ILayerVersion, LayerVersion } from 'aws-cdk-lib/aws-lambda';
 
 export class ProductsAppStack extends Stack {
 
 	readonly productsFetchHandler: NodejsFunction;
 	readonly productsAdminHandler: NodejsFunction;
 	readonly productsDynamoDb: Table;
+	readonly productLayer: ILayerVersion;
 
-	constructor(scope: Construct, id: string, props?: StackProps) {
+	constructor(
+		private readonly scope: Construct,
+		private readonly id: string,
+		private readonly props?: StackProps
+	) {
 		super(scope, id, props);
-
-		/**
-		 * Cria a tabela de produtos
-		 */
 		this.productsDynamoDb = this.createProductsTable.call(this);
-
-		/**
-		 * Cria a lambda para fetch de produtos
-		 */
+		this.productLayer = this.getProductsLayer.call(this);
 		this.productsFetchHandler = this.createProductFetchHandler.call(this);
-
-		/**
-		 * Cria a lambda para admin de produtos
-		 */
 		this.productsAdminHandler = this.createProductsAdminHandler.call(this);
-
-		/**
-		 * Chama o método para adicionar permissões adicionais
-		 */
 		this.additionalPermissions.call(this);
+	}
+
+	/**
+	 * Método responsável por capturar o layer de produtos
+	 */
+	private getProductsLayer() {
+		const productLayerArn = StringParameter.valueForStringParameter(
+			this.scope,
+			'ProductsLayerVersionARN'
+		);
+
+		const productsLayer = LayerVersion.fromLayerVersionArn(
+			this,
+			'ProductsLayerVersionARN',
+			productLayerArn
+		);
+
+		return productsLayer;
 	}
 
 	/**
@@ -88,7 +98,10 @@ export class ProductsAppStack extends Stack {
 					minify: true,
 					sourceMap: false
 				},
-				environment
+				environment,
+				layers: [
+					this.productLayer
+				]
 			}
 		);
 
@@ -127,7 +140,10 @@ export class ProductsAppStack extends Stack {
 					minify: true,
 					sourceMap: false
 				},
-				environment
+				environment,
+				layers: [
+					this.productLayer
+				]
 			}
 		);
 
