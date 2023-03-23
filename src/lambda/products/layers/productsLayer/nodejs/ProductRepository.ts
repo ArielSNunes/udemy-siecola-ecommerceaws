@@ -56,4 +56,24 @@ export class ProductRepository {
 			throw new Error('Product not destroyed');
 		return deletedProduct.Attributes as IProduct;
 	}
+
+	async update(productId: string, product: IProduct): Promise<IProduct> {
+		const data = await this.dbClient.update({
+			TableName: this.tableName,
+			Key: { id: product },
+			ConditionExpression: 'attribute_exists(id)',
+			ReturnValues: 'UPDATED_NEW',
+			UpdateExpression: 'set productName = :n, code :c, price = :p, model = :m',
+			ExpressionAttributeValues: {
+				':n': product.productName,
+				':c': product.code,
+				':p': product.price,
+				':m': product.model
+			}
+		}).promise();
+
+		data.Attributes!.id = productId;
+
+		return data.Attributes as IProduct;
+	}
 }

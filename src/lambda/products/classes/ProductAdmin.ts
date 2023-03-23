@@ -4,7 +4,7 @@ export type GetProductsParams = {
 	id?: string
 }
 
-export class AdminCreateProduct {
+export class ProductAdmin {
 	/**
 	 * Ids da requisição e da lambda
 	 */

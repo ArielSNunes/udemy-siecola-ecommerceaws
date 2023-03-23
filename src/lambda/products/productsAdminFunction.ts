@@ -1,5 +1,5 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from "aws-lambda";
-import { AdminCreateProduct } from "./classes/AdminCreateProduct";
+import { ProductAdmin } from "./classes/ProductAdmin";
 import { PathChecker } from "./classes/PathChecker";
 
 export async function handler(
@@ -17,13 +17,13 @@ export async function handler(
 	);
 
 	if (pathChecker.checkRouteAndMethod('/products', 'POST')) {
-		const productsAdmin = new AdminCreateProduct(event, context);
+		const productsAdmin = new ProductAdmin(event, context);
 		return productsAdmin.createProduct();
 	} else if (pathChecker.checkRouteAndMethod('/products/{id}', 'PUT')) {
-		const productsAdmin = new AdminCreateProduct(event, context);
+		const productsAdmin = new ProductAdmin(event, context);
 		return productsAdmin.updateProduct();
 	} else if (pathChecker.checkRouteAndMethod('/products/{id}', 'DELETE')) {
-		const productsAdmin = new AdminCreateProduct(event, context);
+		const productsAdmin = new ProductAdmin(event, context);
 		return productsAdmin.deleteProduct();
 	}
 
