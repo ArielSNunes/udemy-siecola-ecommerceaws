@@ -12,7 +12,7 @@ const tags = { cost: 'ECommerce', team: 'ArielSNDev' };
 
 const productLayer = new ProductAppLayersStack(
 	app,
-	'ProductsLayer',
+	'ProductsAppLayers',
 	{
 		env,
 		tags

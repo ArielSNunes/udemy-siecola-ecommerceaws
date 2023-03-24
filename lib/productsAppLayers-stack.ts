@@ -12,7 +12,7 @@ export class ProductAppLayersStack extends Stack {
 		private readonly props?: StackProps
 	) {
 		super(scope, id, props);
-
+	
 		this.productsLayer = this.createLayerVersion.call(this);
 	}
 
@@ -23,7 +23,7 @@ export class ProductAppLayersStack extends Stack {
 			this,
 			layerName,
 			{
-				code: Code.fromAsset('src/lambda/products/layers/productsLayer/nodejs'),
+				code: Code.fromAsset('src/lambda/products/layers/productsLayer'),
 				compatibleRuntimes: [
 					Runtime.NODEJS_14_X
 				],
@@ -31,9 +31,9 @@ export class ProductAppLayersStack extends Stack {
 				removalPolicy: RemovalPolicy.RETAIN
 			}
 		);
-
+		
 		const systemManager = new StringParameter(
-			this.scope,
+			this,
 			systemManagerName,
 			{
 				parameterName: systemManagerName,

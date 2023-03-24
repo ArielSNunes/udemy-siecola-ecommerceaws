@@ -30,7 +30,7 @@ export class ProductsAppStack extends Stack {
 	 */
 	private getProductsLayer() {
 		const productLayerArn = StringParameter.valueForStringParameter(
-			this.scope,
+			this,
 			'ProductsLayerVersionARN'
 		);
 
