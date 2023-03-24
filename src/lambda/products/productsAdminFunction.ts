@@ -1,6 +1,12 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from "aws-lambda";
 import { ProductAdmin } from "./classes/ProductAdmin";
 import { PathChecker } from "./classes/PathChecker";
+import { DocumentClient } from "aws-sdk/clients/dynamodb";
+import { ProductRepository } from "/opt/nodejs/productsLayer";
+
+const productsDatabase = process.env.PRODUCTS_DYNAMO_TABLE_NAME!;
+const dynamoClient = new DocumentClient();
+const productRepo = new ProductRepository(dynamoClient, productsDatabase);
 
 export async function handler(
 	event: APIGatewayProxyEvent,
@@ -17,13 +23,13 @@ export async function handler(
 	);
 
 	if (pathChecker.checkRouteAndMethod('/products', 'POST')) {
-		const productsAdmin = new ProductAdmin(event, context);
+		const productsAdmin = new ProductAdmin(event, context, productRepo);
 		return productsAdmin.createProduct();
 	} else if (pathChecker.checkRouteAndMethod('/products/{id}', 'PUT')) {
-		const productsAdmin = new ProductAdmin(event, context);
+		const productsAdmin = new ProductAdmin(event, context, productRepo);
 		return productsAdmin.updateProduct();
 	} else if (pathChecker.checkRouteAndMethod('/products/{id}', 'DELETE')) {
-		const productsAdmin = new ProductAdmin(event, context);
+		const productsAdmin = new ProductAdmin(event, context, productRepo);
 		return productsAdmin.deleteProduct();
 	}
 

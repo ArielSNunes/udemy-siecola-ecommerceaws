@@ -71,9 +71,7 @@ export class ProductRepository {
 				':m': product.model
 			}
 		}).promise();
-
 		data.Attributes!.id = productId;
-
 		return data.Attributes as IProduct;
 	}
 }

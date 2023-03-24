@@ -23,7 +23,7 @@ export class ProductAppLayersStack extends Stack {
 			this,
 			layerName,
 			{
-				code: Code.fromAsset('lambda/products/layers/productsLayer'),
+				code: Code.fromAsset('src/lambda/products/layers/productsLayer/nodejs'),
 				compatibleRuntimes: [
 					Runtime.NODEJS_14_X
 				],
@@ -37,7 +37,7 @@ export class ProductAppLayersStack extends Stack {
 			systemManagerName,
 			{
 				parameterName: systemManagerName,
-				stringValue: this.productsLayer.layerVersionArn
+				stringValue: lambdaLayer.layerVersionArn
 			}
 		);
 

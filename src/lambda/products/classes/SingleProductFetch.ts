@@ -1,4 +1,5 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from "aws-lambda";
+import { ProductRepository } from "/opt/nodejs/productsLayer";
 
 export type GetProductsParams = {
 	id?: string
@@ -13,7 +14,8 @@ export class SingleProductFetch {
 
 	constructor(
 		private readonly event: APIGatewayProxyEvent,
-		private readonly context: Context
+		private readonly context: Context,
+		private readonly productRepo: ProductRepository
 	) {
 		this.lambdaRequestId = this.context.awsRequestId;
 		this.apiRequestId = this.event.requestContext.requestId;
@@ -24,13 +26,17 @@ export class SingleProductFetch {
 	 */
 	async execute(): Promise<APIGatewayProxyResult> {
 		const params = this.event.pathParameters as GetProductsParams;
-
-		return {
-			statusCode: 200,
-			body: JSON.stringify({
-				message: `GET products/${params.id}`,
-				params
-			})
-		};
+		try {
+			const product = await this.productRepo.getProductById(params.id!);
+			return { statusCode: 200, body: JSON.stringify(product) };
+		} catch (err) {
+			console.log((<Error>err).message);
+			return {
+				statusCode: 404,
+				body: JSON.stringify({
+					message: (<Error>err).message,
+				})
+			};
+		}
 	}
 }

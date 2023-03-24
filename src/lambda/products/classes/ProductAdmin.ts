@@ -1,4 +1,5 @@
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from "aws-lambda";
+import { IProduct, ProductRepository } from "/opt/nodejs/productsLayer";
 
 export type GetProductsParams = {
 	id?: string
@@ -13,7 +14,8 @@ export class ProductAdmin {
 
 	constructor(
 		private readonly event: APIGatewayProxyEvent,
-		private readonly context: Context
+		private readonly context: Context,
+		private readonly productRepo: ProductRepository
 	) {
 		this.lambdaRequestId = this.context.awsRequestId;
 		this.apiRequestId = this.event.requestContext.requestId;
@@ -23,12 +25,9 @@ export class ProductAdmin {
 	 * Método responsável por buscar os produtos
 	 */
 	async createProduct(): Promise<APIGatewayProxyResult> {
-		return {
-			statusCode: 201,
-			body: JSON.stringify({
-				message: `POST products`
-			})
-		};
+		const product = JSON.parse(this.event.body!) as IProduct
+		const createdProduct = await this.productRepo.create(product);
+		return { statusCode: 201, body: JSON.stringify(createdProduct) };
 	}
 
 	/**
@@ -36,14 +35,16 @@ export class ProductAdmin {
 	 */
 	async updateProduct(): Promise<APIGatewayProxyResult> {
 		const params = this.event.pathParameters as GetProductsParams;
-
-		return {
-			statusCode: 200,
-			body: JSON.stringify({
-				message: `PUT products/${params.id}`,
-				params
-			})
-		};
+		const product = JSON.parse(this.event.body!) as IProduct;
+		try {
+			const updatedProduct = await this.productRepo.update(params.id!, product);
+			return { statusCode: 201, body: JSON.stringify(updatedProduct) };
+		} catch (err) {
+			return {
+				statusCode: 404,
+				body: JSON.stringify('Product not found')
+			};
+		}
 	}
 
 	/**
@@ -51,13 +52,20 @@ export class ProductAdmin {
 	 */
 	async deleteProduct(): Promise<APIGatewayProxyResult> {
 		const params = this.event.pathParameters as GetProductsParams;
-
-		return {
-			statusCode: 204,
-			body: JSON.stringify({
-				message: `DELETE products/${params.id}`,
-				params
-			})
-		};
+		try {
+			const product = await this.productRepo.destroy(params.id!);
+			return {
+				statusCode: 200,
+				body: JSON.stringify(product)
+			};
+		} catch (err) {
+			console.log((<Error>err).message);
+			return {
+				statusCode: 404,
+				body: JSON.stringify({
+					message: (<Error>err).message,
+				})
+			};
+		}
 	}
 }
