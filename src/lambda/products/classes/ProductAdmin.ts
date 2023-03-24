@@ -40,9 +40,10 @@ export class ProductAdmin {
 			const updatedProduct = await this.productRepo.update(params.id!, product);
 			return { statusCode: 201, body: JSON.stringify(updatedProduct) };
 		} catch (err) {
+			console.log((<Error>err).message);
 			return {
 				statusCode: 404,
-				body: JSON.stringify('Product not found')
+				body: JSON.stringify({ error: 'Product not found' })
 			};
 		}
 	}

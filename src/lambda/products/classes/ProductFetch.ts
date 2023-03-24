@@ -22,9 +22,6 @@ export class ProductFetch {
 	 */
 	async execute(): Promise<APIGatewayProxyResult> {
 		const products = await this.productRepo.getAllProducts();
-		return {
-			statusCode: 200,
-			body: JSON.stringify(products)
-		};
+		return { statusCode: 200, body: JSON.stringify(products) };
 	}
 }
