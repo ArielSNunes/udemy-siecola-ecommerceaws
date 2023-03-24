@@ -25,7 +25,7 @@ export class ProductAdmin {
 	 * Método responsável por buscar os produtos
 	 */
 	async createProduct(): Promise<APIGatewayProxyResult> {
-		const product = JSON.parse(this.event.body!) as IProduct
+		const product = JSON.parse(this.event.body!) as IProduct;
 		const createdProduct = await this.productRepo.create(product);
 		return { statusCode: 201, body: JSON.stringify(createdProduct) };
 	}

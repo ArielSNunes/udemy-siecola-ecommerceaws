@@ -58,7 +58,7 @@ export class ProductsAppStack extends Stack {
 				removalPolicy: RemovalPolicy.DESTROY,
 				partitionKey: {
 					name: 'id',
-					type: AttributeType.NUMBER
+					type: AttributeType.STRING
 				},
 				billingMode: BillingMode.PROVISIONED,
 				readCapacity: 1,
