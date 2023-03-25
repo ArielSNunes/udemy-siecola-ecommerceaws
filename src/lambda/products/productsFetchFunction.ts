@@ -5,6 +5,9 @@ import { ProductFetch } from "./classes/ProductFetch";
 import { SingleProductFetch } from "./classes/SingleProductFetch";
 import { ProductRepository } from "/opt/nodejs/productsLayer";
 
+import { captureAWS } from 'aws-xray-sdk';
+captureAWS(require('aws-sdk'));
+
 const productsDatabase = process.env.PRODUCTS_DYNAMO_TABLE_NAME!;
 const dynamoClient = new DocumentClient();
 const productRepo = new ProductRepository(dynamoClient, productsDatabase);

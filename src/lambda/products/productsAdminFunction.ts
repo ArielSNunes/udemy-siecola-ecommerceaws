@@ -4,6 +4,9 @@ import { PathChecker } from "./classes/PathChecker";
 import { DocumentClient } from "aws-sdk/clients/dynamodb";
 import { ProductRepository } from "/opt/nodejs/productsLayer";
 
+import { captureAWS } from 'aws-xray-sdk';
+captureAWS(require('aws-sdk'));
+
 const productsDatabase = process.env.PRODUCTS_DYNAMO_TABLE_NAME!;
 const dynamoClient = new DocumentClient();
 const productRepo = new ProductRepository(dynamoClient, productsDatabase);
