@@ -5,47 +5,63 @@ import { AttributeType, BillingMode, Table, TableClass } from 'aws-cdk-lib/aws-d
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { ILayerVersion, LambdaInsightsVersion, LayerVersion, Tracing } from 'aws-cdk-lib/aws-lambda';
 
+export interface IProductsAppStackProps extends StackProps {
+	eventsDb: Table
+}
+
 export class ProductsAppStack extends Stack {
 
 	readonly productsFetchHandler: NodejsFunction;
 	readonly productsAdminHandler: NodejsFunction;
+	readonly productsEventsHandler: NodejsFunction;
 	readonly productsDynamoDb: Table;
-	readonly productLayer: ILayerVersion;
+	readonly productAppLayer: ILayerVersion;
+	readonly productEventsLayer: ILayerVersion;
 
 	constructor(
 		private readonly scope: Construct,
 		private readonly id: string,
-		private readonly props?: StackProps
+		private readonly props: IProductsAppStackProps
 	) {
 		super(scope, id, props);
+
 		this.productsDynamoDb = this.createProductsTable.call(this);
-		this.productLayer = this.getProductsLayer.call(this);
+		this.productAppLayer = this.getProductsLayer.call(this);
+		this.productEventsLayer = this.getProductsEventsLayer.call(this);
+		this.productsEventsHandler = this.createProductsEventsHandler.call(this);
 		this.productsFetchHandler = this.createProductFetchHandler.call(this);
 		this.productsAdminHandler = this.createProductsAdminHandler.call(this);
 		this.additionalPermissions.call(this);
 	}
 
-	/**
-	 * Método responsável por capturar o layer de produtos
-	 */
 	private getProductsLayer() {
+		const lambdaSettingsName = 'ProductsLayerVersionARN';
 		const productLayerArn = StringParameter.valueForStringParameter(
 			this,
-			'ProductsLayerVersionARN'
+			lambdaSettingsName
 		);
-
 		const productsLayer = LayerVersion.fromLayerVersionArn(
 			this,
-			'ProductsLayerVersionARN',
+			lambdaSettingsName,
 			productLayerArn
 		);
-
 		return productsLayer;
 	}
 
-	/**
-	 * Método responsável por criar a tabela de products
-	 */
+	private getProductsEventsLayer() {
+		const lambdaSettingsName = 'ProductsEventsLayerARN';
+		const productEventsLayerArn = StringParameter.valueForStringParameter(
+			this,
+			lambdaSettingsName
+		);
+		const productsLayer = LayerVersion.fromLayerVersionArn(
+			this,
+			lambdaSettingsName,
+			productEventsLayerArn
+		);
+		return productsLayer;
+	}
+
 	private createProductsTable() {
 		/**
 		 * Cria a instância da tabela
@@ -69,22 +85,42 @@ export class ProductsAppStack extends Stack {
 		return table;
 	}
 
-	private createProductsAdminHandler() {
-		/**
-		 * Nome da função
-		 */
-		const functionName = 'ProductsAdminFunction';
-
-		/**
-		 * Variáveis de ambiente para serem passadas para a função lambda
-		 */
+	private createProductsEventsHandler() {
+		const functionName = 'ProductsEventsFunction';
 		const environment = {
-			PRODUCTS_DYNAMO_TABLE_NAME: this.productsDynamoDb.tableName
+			EVENTS_DYNAMO_TABLE_NAME: this.props.eventsDb.tableName
 		};
+		const lambdaFunc = new NodejsFunction(
+			this,
+			functionName,
+			{
+				functionName,
+				entry: 'src/lambda/products/productsEventFunction.ts',
+				handler: 'handler',
+				memorySize: 128, // 128Mb
+				timeout: Duration.seconds(2),
+				bundling: {
+					minify: true,
+					sourceMap: false
+				},
+				environment,
+				tracing: Tracing.ACTIVE,
+				insightsVersion: LambdaInsightsVersion.VERSION_1_0_119_0,
+				layers: [
+					this.productEventsLayer
+				]
+			}
+		);
 
-		/**
-		 * Estrutura da lambda
-		 */
+		return lambdaFunc;
+	}
+
+	private createProductsAdminHandler() {
+		const functionName = 'ProductsAdminFunction';
+		const environment = {
+			PRODUCTS_DYNAMO_TABLE_NAME: this.productsDynamoDb.tableName,
+			PRODUCT_EVENTS_FUNCTION_NAME: this.productsEventsHandler.functionName
+		};
 		const lambdaFunc = new NodejsFunction(
 			this,
 			functionName,
@@ -100,7 +136,8 @@ export class ProductsAppStack extends Stack {
 				},
 				environment,
 				layers: [
-					this.productLayer
+					this.productAppLayer,
+					this.productEventsLayer
 				],
 				tracing: Tracing.ACTIVE,
 				insightsVersion: LambdaInsightsVersion.VERSION_1_0_119_0
@@ -110,25 +147,11 @@ export class ProductsAppStack extends Stack {
 		return lambdaFunc;
 	}
 
-	/**
-	 * Método responsável por criar o resource da stack
-	 */
 	private createProductFetchHandler() {
-		/**
-		 * Nome da função
-		 */
 		const functionName = 'ProductsFetchFunction';
-
-		/**
-		 * Variáveis de ambiente para serem passadas para a função lambda
-		 */
 		const environment = {
 			PRODUCTS_DYNAMO_TABLE_NAME: this.productsDynamoDb.tableName
 		};
-
-		/**
-		 * Estrutura da lambda
-		 */
 		const lambdaFunc = new NodejsFunction(
 			this,
 			functionName,
@@ -144,7 +167,7 @@ export class ProductsAppStack extends Stack {
 				},
 				environment,
 				layers: [
-					this.productLayer
+					this.productAppLayer
 				],
 				tracing: Tracing.ACTIVE,
 				insightsVersion: LambdaInsightsVersion.VERSION_1_0_119_0
@@ -154,11 +177,10 @@ export class ProductsAppStack extends Stack {
 		return lambdaFunc;
 	}
 
-	/**
-	 * Método resposável por adicionar as permissões entre os recursos da stack
-	 */
 	private additionalPermissions() {
 		this.productsDynamoDb.grantReadData(this.productsFetchHandler);
 		this.productsDynamoDb.grantWriteData(this.productsAdminHandler);
+		this.props.eventsDb.grantWriteData(this.productsEventsHandler);
+		this.productsEventsHandler.grantInvoke(this.productsAdminHandler);
 	}
 }

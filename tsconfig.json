@@ -26,6 +26,9 @@
     "paths": {
       "/opt/nodejs/productsLayer": [
         "src/lambda/products/layers/productsLayer/nodejs/ProductRepository"
+      ],
+      "/opt/nodejs/productsEventsLayer": [
+        "src/lambda/products/layers/productsEventsLayer/nodejs/ProductEvent"
       ]
     }
   },

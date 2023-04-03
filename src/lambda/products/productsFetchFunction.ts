@@ -4,8 +4,8 @@ import { PathChecker } from "./classes/PathChecker";
 import { ProductFetch } from "./classes/ProductFetch";
 import { SingleProductFetch } from "./classes/SingleProductFetch";
 import { ProductRepository } from "/opt/nodejs/productsLayer";
-
 import { captureAWS } from 'aws-xray-sdk';
+
 captureAWS(require('aws-sdk'));
 
 const productsDatabase = process.env.PRODUCTS_DYNAMO_TABLE_NAME!;
@@ -18,7 +18,6 @@ export async function handler(
 ): Promise<APIGatewayProxyResult> {
 	const pathChecker = new PathChecker(event, context);
 	const { apiRequestId, lambdaRequestId } = pathChecker;
-
 
 	/**
 	 * Log será visualizado no CloudWatch e gera custo
