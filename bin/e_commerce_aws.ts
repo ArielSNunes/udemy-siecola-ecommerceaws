@@ -4,7 +4,7 @@ import * as cdk from 'aws-cdk-lib';
 import { ProductsAppStack } from '../lib/productsApp-stack';
 import { EcommerceApiStack } from '../lib/ecommerceApi-stack';
 import { ProductAppLayersStack } from '../lib/productsAppLayers-stack';
-import { EventsDynamoDbStack } from 'lib/eventsDynamoDb-stack';
+import { EventsDynamoDbStack } from '../lib/eventsDynamoDb-stack';
 
 const app = new cdk.App();
 

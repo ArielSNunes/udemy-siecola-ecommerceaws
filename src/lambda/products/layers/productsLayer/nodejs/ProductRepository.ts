@@ -1,5 +1,8 @@
 import { v4 } from "uuid";
-import { DocumentClient, ScanInput } from 'aws-sdk/clients/dynamodb';
+import { DocumentClient } from 'aws-sdk/clients/dynamodb';
+import { Lambda } from "aws-sdk";
+import { IProductEvent, ProductEventType } from "/opt/nodejs/productsEventsLayer";
+
 
 export interface IProduct {
 	id: string;
@@ -13,7 +16,8 @@ export interface IProduct {
 export class ProductRepository {
 	constructor(
 		private readonly dbClient: DocumentClient,
-		private readonly tableName: string
+		private readonly tableName: string,
+		private readonly lambdaClient: Lambda
 	) { }
 
 	async getAllProducts(): Promise<IProduct[]> {
@@ -42,7 +46,7 @@ export class ProductRepository {
 			TableName: this.tableName,
 			Item: product
 		}).promise();
-
+		
 		return product;
 	}
 
