@@ -42,7 +42,7 @@ export class ProductAdmin {
 				productId: product.id,
 				requestId: lambdaRequestId
 			}),
-			InvocationType: 'RequestResponse'
+			InvocationType: 'Event'
 		}).promise();
 	}
 	/**
