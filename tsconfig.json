@@ -29,6 +29,9 @@
       ],
       "/opt/nodejs/productsEventsLayer": [
         "src/lambda/products/layers/productsEventsLayer/nodejs/ProductEvent"
+      ],
+      "/opt/nodejs/ordersLayer": [
+        "src/lambda/orders/layers/ordersLayer/nodejs/OrderRepository"
       ]
     }
   },
